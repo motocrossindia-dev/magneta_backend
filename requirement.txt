@@ -1,0 +1,16 @@
+
+beautifulsoup4
+bs4
+Django==4.2
+django-cors-headers
+django-jazzmin
+djangorestframework
+djangorestframework-simplejwt
+numpy
+pandas
+pillow
+python-dateutil
+python-decouple
+reportlab
+requests
+
