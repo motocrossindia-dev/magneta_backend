@@ -70,6 +70,8 @@ class salesPersonordersTransaction(models.Model):
         return f"{self.sales_person}"
 
 
+
+
 class retailerTransactionDetails(models.Model):
     retailer = models.ForeignKey(UserBase, on_delete=models.CASCADE, related_name='retailer_retailerTransactionDetails')
     amount = models.FloatField(max_length=10)

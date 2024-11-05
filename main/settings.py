@@ -155,3 +155,6 @@ REST_FRAMEWORK = {
     ),
     # 'PAGE_SIZE': 1
 }
+
+
+FRONTEND_BASE_URL = "http://localhost:3000"

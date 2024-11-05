@@ -76,9 +76,14 @@ class GETretailerMainOrderSerializer(serializers.ModelSerializer):
 
     def get_first_name_id(self, obj):
         if obj.retailer and obj.retailer.user_id:
-            user_id = obj.retailer.user_id.split('-')[-1]  # Extracting the user id
-            return f"{obj.retailer.first_name}_{user_id}"
+            user_id = obj.retailer.enterprise_name # Extracting the user id
+            return user_id
         return None
+    # def get_first_name_id(self, obj):
+    #     if obj.retailer and obj.retailer.user_id:
+    #         user_id = obj.retailer.user_id.split('-')[-1]  # Extracting the user id
+    #         return f"{obj.retailer.first_name}_{user_id}"
+    #     return None
     def get_retailer_id(self, obj):
         if obj.retailer and obj.retailer.user_id:
             user_id = obj.retailer.id

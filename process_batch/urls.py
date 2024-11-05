@@ -3,7 +3,8 @@ from django.urls import path
 from process_batch.views.BatchMixNew import batch_mix_create_new
 from process_batch.views.batchMix import batch_mix_create, batch_mix_detail, \
     BatchMixIcCreamMixListView, BatchMixSyrupAndSouceListView, BatchMixChoclateIcCreamMixListView, \
-    batch_mix_update_view, BatchMixUpdateView, BatchMixWithTemplateDetail, batch_mix_chocolate_icecream_create
+    batch_mix_update_view, BatchMixUpdateView, BatchMixWithTemplateDetail, batch_mix_chocolate_icecream_create, \
+    batch_mix_chocolate_icecream_batchmix_update_view
 from process_batch.views.batchMixChocolateIceCreamTemplate import batch_mix_chocolate_ice_cream_templates, \
     get_batch_mix_chocolate_ice_cream_template, update_batch_chocolate_ice_cream_mix_template
 from process_batch.views.batchMixIcecreamTemplate import batch_mix_icecream_template, get_batch_mix_icecream_template, \
@@ -34,9 +35,13 @@ urlpatterns = [
     path('batch_mix_icecream_template/', batch_mix_icecream_template, name='batch_mix_templates'),
     path('batch_mix_icecream_template/<int:pk>/', get_batch_mix_icecream_template, name='get_batch_mix_template'),
 
-    # <editor-fold desc="batch mix create related">
-    path('batch_mix/', batch_mix_create, name='batch_mix'),
+    # <editor-fold desc="batch mix create related ">
+    # path('batch_mix/', batch_mix_create, name='batch_mix'),
+
     # path('chocolate_ice_cream_batch_mix/', batch_mix_chocolate_icecream_create, name='batch_mix_chocolate_icecream_create'),
+    # </editor-fold>
+    # <editor-fold desc="chocolate and icecream batch mix template">
+    path('batch_mix/', batch_mix_chocolate_icecream_create, name='batch_mix_chocolate_icecream_create'),
     # </editor-fold>
 
     # <editor-fold desc="ice cream related post  for create ice ">
@@ -84,7 +89,8 @@ urlpatterns = [
 
 
     # <editor-fold desc="batch mix update">
-    path('batch_mix_update/<int:pk>/', batch_mix_update_view, name='batch_mix_update_view'),
+    # path('batch_mix_update/<int:pk>/', batch_mix_update_view, name='batch_mix_update_view'),
+    path('batch_mix_update/<int:pk>/', batch_mix_chocolate_icecream_batchmix_update_view, name='batch_mix_chocolate_icecream_batchmix_update_view'),
     # </editor-fold>
     path('batchmix_expired/<int:pk>/', BatchMixUpdateView.as_view(), name='batchmix-update'),
 

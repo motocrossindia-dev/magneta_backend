@@ -40,6 +40,10 @@ class RetailerMainOrders(models.Model):
         """Set pending_amount to 0 if payment_status is 'paid'."""
         if self.payment_status.lower() == "paid":
             self.pending_amount = 0.00
+
+        if self.mode_of_payment.lower() in ["free sample", "paid", "cancelled"] or self.payment_status.lower() in ["cancelled"]:
+            self.pending_amount = 0.0
+            self.grand_total-=self.pending_amount
         super().save(*args, **kwargs)
 
 
@@ -71,16 +75,6 @@ class RetailerMainOrders(models.Model):
         total_cancelled = sum(order.pending_amount for order in orders)
         return total_cancelled
 
-    # def total_cancelled_amount_by_retailer(self, retailer_id):
-    #     """Calculate total cancelled amount for a specific retailer, avoiding duplicates."""
-    #     orders = RetailerMainOrders.objects.filter(
-    #         distributor=self.distributor,
-    #         retailer_id=retailer_id,
-    #         payment_status__contains="cancelled"
-    #     ).distinct()
-    #     total_cancelled = sum(order.grand_total for order in orders)
-    #
-    #     return total_cancelled
 
     def total_bill_amount_by_retailer(self, retailer_id):
         """Calculate total bill amount based on pending amounts for a specific retailer, excluding cancelled orders."""
@@ -94,103 +88,50 @@ class RetailerMainOrders(models.Model):
         total_bill = sum(order.pending_amount for order in orders)
         return total_bill
 
-    # def total_bill_amount_by_retailer(self, retailer_id):
-    #     """Calculate total bill amount for a specific retailer, avoiding duplicates."""
-    #     orders = RetailerMainOrders.objects.filter(
-    #         distributor=self.distributor,
-    #         retailer_id=retailer_id
-    #     ).distinct()
-    #
-    #     total_bill = sum(order.grand_total for order in orders if order.payment_status.lower() != "cancelled")
-    #
-    #
-    #     return total_bill
+    # ========================
+    # distributor
+    # =========================
+    def total_bill_amount(self):
+        """Calculate total bill amount for all retailers of a specific distributor, excluding cancelled orders."""
+        orders = RetailerMainOrders.objects.filter(
+            distributor=self.distributor
+        ).exclude(
+            payment_status="cancelled"
+        )
 
-    # new==
+        # Sum the sub_total for all non-cancelled orders
+        total_bill = sum(order.grand_total for order in orders)
+        return total_bill
 
-    # def total_pending_amount_by_retailer(self, retailer_id):
-    #     """Calculate total pending amount for a specific retailer, avoiding duplicates."""
-    #     orders = RetailerMainOrders.objects.filter(distributor=self.distributor,retailer_id=retailer_id).distinct()
-    #     total_pending = 0.0
-    #
-    #     for order in orders:
-    #         if order.mode_of_payment.lower() in ["free sample", "paid","cancelled"] or order.payment_status.lower() == "cancelled":
-    #             total_pending -= order.pending_amount
-    #         else:
-    #             total_pending += order.pending_amount
-    #
-    #         # print(f"Order ID: {order.id}, Pending Amount: {order.pending_amount}, Total Pending: {total_pending}")
-    #
-    #     return total_pending
-    #
-    # def total_cancelled_amount_by_retailer(self, retailer_id):
-    #     """Calculate total cancelled amount for a specific retailer, avoiding duplicates."""
-    #     orders = RetailerMainOrders.objects.filter(distributor=self.distributor,retailer_id=retailer_id,
-    #                                                payment_status__iexact="cancelled").distinct()
-    #     total_cancelled = 0.0
-    #
-    #     for order in orders:
-    #         total_cancelled += order.grand_total
-    #
-    #         # print(f"Cancelled Order ID: {order.id}, Pending Amount: {order.grand_total}, Total Cancelled: {total_cancelled}")
-    #
-    #     return total_cancelled
-    #
-    # def total_bill_amount_by_retailer(self, retailer_id):
-    #     """Calculate total bill amount for a specific retailer, avoiding duplicates."""
-    #     orders = RetailerMainOrders.objects.filter(distributor=self.distributor,retailer_id=retailer_id).distinct()
-    #     total_bill = 0.0
-    #
-    #     for order in orders:
-    #         if order.payment_status.lower() == "cancelled":
-    #             total_bill -= order.grand_total
-    #         else:
-    #             total_bill += order.grand_total
-    #
-    #         # print(f"Order ID: {order.id}, Pending Amount: {order.grand_total}, Total Bill: {total_bill}")
-    #
-    #     return total_bill
+    def total_pending_amount(self):
+        """Calculate total pending amount for all retailers of a specific distributor, excluding cancelled orders."""
+        orders = RetailerMainOrders.objects.filter(
+            distributor=self.distributor
+        ).exclude(
+            payment_status="cancelled"
+        )
 
-    # def total_pending_amount_by_retailer(self, retailer_id):
-    #     """Calculate total pending amount for a specific retailer, deducting amounts based on conditions."""
-    #     # Get all orders for the specific retailer
-    #     orders = RetailerMainOrders.objects.filter(retailer_id=retailer_id)
-    #
-    #     total_pending = 0.0
-    #     for order in orders:
-    #         if order.mode_of_payment.lower() in ["free sample", "paid"] or order.payment_status.lower() == "cancelled":
-    #             total_pending -= order.pending_amount  # Deduct if the conditions are met
-    #         else:
-    #             total_pending += order.pending_amount  # Add if the conditions are not met
-    #
-    #     return total_pending
-    #
-    #
-    # def total_cancelled_amount_by_retailer(self, retailer_id):
-    #     """Calculate total cancelled amount for a specific retailer."""
-    #     orders = RetailerMainOrders.objects.filter(retailer_id=retailer_id, payment_status__iexact="cancelled")
-    #
-    #     total_cancelled = 0.0
-    #     for order in orders:
-    #         total_cancelled += order.pending_amount  # Add all cancelled order pending amounts
-    #
-    #     return total_cancelled
-    #
-    # def total_bill_amount_by_retailer(self, retailer_id):
-    #     """Calculate total pending amount for a specific retailer, deducting amounts only for cancelled orders."""
-    #     # Get all orders for the specific retailer
-    #     orders = RetailerMainOrders.objects.filter(retailer_id=retailer_id)
-    #
-    #     total_pending = 0.0
-    #     for order in orders:
-    #         if order.payment_status.lower() == "cancelled":
-    #             total_pending -= order.pending_amount  # Deduct if the order is cancelled
-    #         else:
-    #             total_pending += order.pending_amount  # Add if the order is not cancelled
-    #
-    #     return total_pending
+        # Sum the pending_amount for all non-cancelled orders
+        total_pending = sum(order.pending_amount for order in orders)
+        return total_pending
+    def total_order_count(self):
+        """Calculate total number of orders for a distributor, excluding orders with payment_status 'cancelled'."""
+        orders = RetailerMainOrders.objects.filter(
+            distributor=self.distributor
+        ).exclude(
+            payment_status__iexact="cancelled"
+        )
 
+        # Count the number of non-cancelled orders
+        total_count = orders.count()
+        return total_count
 
+    def total_settiled_amount(self):
+        total_amount=0
+        settiled_amount=self.retailer_main_orders_transaction.all()
+        for amount in settiled_amount:
+            total_amount+=amount.amount_settled
+        return total_amount
     # ===========================
     @property
     def retailer_orders_discounts_total(self):

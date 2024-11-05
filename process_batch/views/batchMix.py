@@ -12,7 +12,8 @@ from rest_framework.response import Response
 from process_batch.models.BatchMix import BatchMix
 from process_batch.serializers.BatchMixSerializer import BatchMixSerializer, GetBatchMixSerializer, \
     BatchMixCreateSerializer, BatchMixUpdateSerializer, GetBatchMixDetailSerializer, BatchMixUpdateExpiredSerializer, \
-    BatchMixIcreamGetTemplateDetailsSerializer, BatchMixChocolateIceCreateSerializer
+    BatchMixIcreamGetTemplateDetailsSerializer, BatchMixChocolateIceCreateSerializer, \
+    BatchMixChocolateIceCreameWithBaseBatchIdCreateSerializer, BatchMixChocolateIceCreamUpdateSerializer
 from process_store.views import add_process_store
 
 logger = logging.getLogger(__name__)
@@ -80,6 +81,9 @@ def batch_mix_chocolate_icecream_create(request):
         batch_data = request.data.get('batch_data', {})
         ingredients = request.data.get('ingredients', [])
 
+        print(batch_data,'==================inital data')
+        print(ingredients,'==================ingredients data')
+
         # Calculate expiration date
         try:
             exp_days = int(batch_data.get('expDays', 3))
@@ -99,18 +103,18 @@ def batch_mix_chocolate_icecream_create(request):
             'ingredients': ingredients
         }
 
-        serializer = BatchMixChocolateIceCreateSerializer(data=data, context={'request': request})
+        serializer = BatchMixChocolateIceCreameWithBaseBatchIdCreateSerializer(data=data, context={'request': request,"batch":data})
 
         if serializer.is_valid():
             batch_mix = serializer.save()
 
             try:
                 add_process_store(batch_mix)
-                logger.info(f"Process store added for batch mix {batch_mix.id}")
+                logger.info(f"Process store added for batch mix {batch_mix}")
             except Exception as e:
-                logger.error(f"Failed to add process store for batch mix {batch_mix.id}: {str(e)}")
+                logger.error(f"Failed to add process store for batch mix {batch_mix}: {str(e)}")
 
-            return Response(BatchMixChocolateIceCreateSerializer(batch_mix).data, status=status.HTTP_201_CREATED)
+            return Response(BatchMixChocolateIceCreameWithBaseBatchIdCreateSerializer(batch_mix).data, status=status.HTTP_201_CREATED)
 
         # If there are errors, format them as specified
         error_message = next(iter(serializer.errors.values()))[0] if serializer.errors else "Validation error"
@@ -127,71 +131,6 @@ def batch_mix_chocolate_icecream_create(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# @api_view(['POST'])
-# def batch_mix_create(request):
-#     try:
-#         batch_data = request.data.get('batch_data', {})
-#         ingredients = request.data.get('ingredients', [])
-#         print(batch_data, "========batch_data")
-#         print(ingredients, "ingredients==========dd")
-#         try:
-#             try:
-#                 expDays = int(batch_data.get('expDays'))
-#             except Exception as e:
-#                 # print(e)
-#                 expDays = 3
-#
-#             expDate = datetime.datetime.strptime(batch_data.get('batchDate'), '%Y-%m-%d') + datetime.timedelta(
-#                 days=expDays)
-#
-#         except Exception as e:
-#             # print(e)
-#             expDate = datetime.datetime.strptime(batch_data.get('batchDate'), '%Y-%m-%d') + datetime.timedelta(days=3)
-#
-#         data = {
-#             'batchName': batch_data.get('batchName'),
-#             'batchCode': batch_data.get('batchCode'),
-#             'batchDate': batch_data.get('batchDate'),
-#             'expDate': expDate.strftime('%Y-%m-%d'),
-#             'subCategory': batch_data.get('subCategory'),
-#             'totalVolume': batch_data.get('totalVolume'),
-#             'ingredients': ingredients
-#         }
-#
-#
-#         try:
-#             serializer = BatchMixCreateSerializer(data=data, context={'request': request})
-#         except Exception as e:
-#             pass
-#             # print(e)
-#         if serializer.is_valid():
-#             batch_mix = serializer.save()
-#             try:
-#                 print("=====================================")
-#                 print(batch_mix.id,batch_mix.totalVolume,batch_mix.expDate)
-#                 print("=====================================")
-#                 process_store_add = add_process_store(batch_mix)
-#                 if process_store_add:
-#                     print("added to process data -------------------------------------------------------------------")
-#                 else:
-#                     print("not added to process data ---------------------------------------------------------------")
-#
-#             except Exception as e:
-#                 print(e)
-#             return Response(BatchMixCreateSerializer(batch_mix).data, status=status.HTTP_201_CREATED)
-#         # If there are errors, format them as you specified
-#         error_response = {
-#             "message": "Validation error.",
-#             "status": status.HTTP_400_BAD_REQUEST
-#         }
-#         if serializer.errors:
-#             # You can customize the message based on the first error or handle multiple errors if needed
-#             first_error_message = list(serializer.errors.values())[0][0] if serializer.errors else "Unknown error"
-#             error_response["message"] = first_error_message
-#             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
-#         return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -272,7 +211,7 @@ class BatchMixChoclateIcCreamMixListView(generics.ListAPIView):
     #
     def list(self, request, *args, **kwargs):
         # Filter by subCategory names
-        filtered_queryset = self.get_queryset().filter(subCategory__category__name__in=["Chocolate Ice Cream"], is_deleted=False)
+        filtered_queryset = self.get_queryset().filter(subCategory__category__name__in=["Chocolate Ice Cream","chocolate Ice Cream"], is_deleted=False)
 
         # Serialize and return the data
         serializer = self.get_serializer(filtered_queryset, many=True)
@@ -331,7 +270,6 @@ def batch_mix_update_view(request, pk):
         if serializer.is_valid():
             updated_batch_mix = serializer.save()
 
-
             # Return the updated data
             return Response({
                 "data": BatchMixUpdateSerializer(updated_batch_mix).data,
@@ -354,46 +292,6 @@ def batch_mix_update_view(request, pk):
             "status": status.HTTP_500_INTERNAL_SERVER_ERROR
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# @api_view(['PUT'])
-# def batch_mix_update_view(request, pk):
-#     try:
-#         batch_mix = BatchMix.objects.get(pk=pk)
-#     except BatchMix.DoesNotExist:
-#         return Response({'error': 'BatchMix not found'}, status=status.HTTP_404_NOT_FOUND)
-#
-#     try:
-#         print(request.data,'===============request data ')
-#         batch_data = request.data.get('batch_data', {})
-#         ingredients = request.data.get('ingredients', [])
-#         try:
-#             expDays = int(batch_data.get('expDays', 3))
-#         except ValueError:
-#             expDays = 3
-#
-#         batch_date = timezone.datetime.strptime(batch_data.get('batchDate'), '%Y-%m-%d').date()
-#         exp_date = batch_date + timedelta(days=expDays)
-#
-#
-#         data = {
-#             'batchName': batch_data.get('batchName'),
-#             'batchCode': batch_data.get('batchCode'),
-#             'batchDate': batch_data.get('batchDate'),
-#             'expDate': exp_date,
-#             'subCategory': batch_data.get('subCategory'),
-#             'totalVolume': batch_data.get('totalVolume'),
-#             'ingredients': ingredients
-#         }
-#         print(batch_mix,'--------------------dtaa send ing data')
-#         serializer = BatchMixUpdateSerializer(batch_mix, data=data, partial=True,context={'request': request})
-#         if serializer.is_valid():
-#             updated_batch_mix = serializer.save()
-#
-#             return Response(BatchMixUpdateSerializer(updated_batch_mix).data, status=status.HTTP_200_OK)
-#
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # </editor-fold>
 
 
@@ -411,3 +309,64 @@ from rest_framework import generics
 class BatchMixWithTemplateDetail(generics.RetrieveAPIView):
     queryset = BatchMix.objects.filter(is_deleted=False)
     serializer_class = BatchMixIcreamGetTemplateDetailsSerializer
+
+
+@api_view(['PUT'])
+def batch_mix_chocolate_icecream_batchmix_update_view(request, pk):
+
+    try:
+        # First try to get the existing batch mix
+        try:
+            batch_mix = BatchMix.objects.get(pk=pk)
+        except BatchMix.DoesNotExist:
+            return Response({
+                "message": "BatchMix not found",
+                "status": status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        batch_data = request.data.get('batch_data', {})
+        ingredients = request.data.get('ingredients', [])
+
+        # Prepare data for update
+        data = {
+            'batchName': batch_data.get('batchName'),
+            'batchCode': batch_data.get('batchCode'),
+            'batchDate': batch_mix.batchDate,
+            'expDate': batch_mix.expDate,
+            'subCategory': batch_data.get('subCategory'),
+            'totalVolume': batch_data.get('totalVolume'),
+            'ingredients': ingredients
+        }
+        serializer = BatchMixChocolateIceCreamUpdateSerializer(
+            batch_mix,
+            data=data,
+            partial=True,
+            context={'request': request,"ingredients_data":ingredients,"batch":data}
+        )
+
+        if serializer.is_valid():
+            updated_batch_mix = serializer.save()
+
+            # Return the updated data
+            return Response({
+                "data": BatchMixChocolateIceCreamUpdateSerializer(updated_batch_mix).data,
+                "message": "Batch mix updated successfully",
+                "status": status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+
+        # If there are validation errors, format them as specified
+        error_message = next(iter(serializer.errors.values()))[0] if serializer.errors else "Validation error"
+        return Response({
+            "message": error_message,
+            "status": status.HTTP_400_BAD_REQUEST
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        # Log the full exception for debugging
+        logger.exception("Unexpected error in batch_mix_update_view")
+        return Response({
+            "message": "An unexpected error occurred",
+            "status": status.HTTP_500_INTERNAL_SERVER_ERROR
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# </editor-fold>

@@ -1,7 +1,9 @@
 import os
+
+from django.conf import settings
 from django.db import models
 from django.core.files import File
-import settings
+
 
 
 class Category(models.Model):

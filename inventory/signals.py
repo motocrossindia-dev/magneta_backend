@@ -133,12 +133,11 @@ def update_store_on_batch_ingredients_save(sender, instance, **kwargs):
             print(f"Quantity reduced by {abs(quantity_to_use)}. Implement return_material if needed.")
 
     except ValidationError as e:
-        raise ValidationError("Not enough quantity in the store")
+        print("Not enough quantity in the store",{e})
     except AttributeError as e:
         print(f"AttributeError: {str(e)}. Skipping use_material.")
     except Exception as e:
         print(f"Unexpected error in signal handler: {str(e)}")
-        raise
 
 # ==================================
 

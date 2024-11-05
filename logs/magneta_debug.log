@@ -2566,3 +2566,28 @@ Original exception text was: 'str' object has no attribute 'vendorFullname'.
 03-11-2024 22:35:12 [INFO] magneta_logger: Stock updated for Main Order 54
 03-11-2024 22:36:08 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
 03-11-2024 22:36:08 [INFO] magneta_logger: Stock updated for Main Order 55
+04-11-2024 14:05:14 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
+04-11-2024 14:05:14 [INFO] magneta_logger: Stock updated for Main Order 56
+04-11-2024 14:07:32 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
+04-11-2024 14:07:32 [INFO] magneta_logger: Stock updated for Main Order 57
+04-11-2024 14:14:56 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
+04-11-2024 14:14:56 [INFO] magneta_logger: Stock updated for Main Order 58
+04-11-2024 14:19:31 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
+04-11-2024 14:19:31 [INFO] magneta_logger: Stock updated for Main Order 59
+04-11-2024 15:45:38 [INFO] magneta_logger: Exception: logout_user checking logger 
+04-11-2024 16:09:11 [INFO] magneta_logger: Exception: logout_user checking logger 
+04-11-2024 21:22:39 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 00:16:18 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
+05-11-2024 00:16:18 [INFO] magneta_logger: Stock updated for Main Order 60
+05-11-2024 00:32:02 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 00:33:47 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 00:41:06 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 00:41:56 [ERROR] magneta_logger: Exception occurred in add_stock: distributor_sales matching query does not exist.
+05-11-2024 00:43:56 [ERROR] magneta_logger: Exception occurred in add_stock: distributor_sales matching query does not exist.
+05-11-2024 00:54:13 [ERROR] magneta_logger: Error in login_user: {'email': [ErrorDetail(string='User with this email does not exist.', code='invalid')]}
+05-11-2024 01:18:49 [INFO] magneta_logger: Stock updated for Main Order 63
+05-11-2024 01:19:18 [INFO] magneta_logger: Stock updated for Main Order 64
+05-11-2024 08:19:49 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 11:10:25 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 11:11:10 [INFO] magneta_logger: Exception: logout_user checking logger 
+05-11-2024 11:41:05 [INFO] magneta_logger: Exception: logout_user checking logger 

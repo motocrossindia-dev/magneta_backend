@@ -5,7 +5,7 @@ from distributors.view.LetterPDF import letter_pdf_temp
 from distributors.view.RetailerMainOrders import retailer_main_orders, get_sales_person_orders
 from distributors.view.RetailerOrders import retailer_orders, distributor_today_collection
 from distributors.view.Retailers import retailers
-from distributors.view.TaxInvoice import tax_invoice, generate_receipt_pdf
+from distributors.view.TaxInvoice import tax_invoice, generate_receipt_pdf, DistributorStatsAPIView
 from distributors.view.search_retailer_orders import search_retailer_orders
 from distributors.views import  calculate_invoice_api
 
@@ -34,4 +34,7 @@ urlpatterns = [
 
 
     path('generate-receipt/<int:pk>/', generate_receipt_pdf, name='generate-receipt'),
+
+
+    path('distributor_stats/', DistributorStatsAPIView.as_view(), name='distributor-stats')
 ]
