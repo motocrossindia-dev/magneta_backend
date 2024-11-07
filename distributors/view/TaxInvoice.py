@@ -625,13 +625,13 @@ class DistributorStatsAPIView(APIView):
 
         # Retrieve distributor-specific stats
         stats = {
-            "total_amount": 0.0,
-            "total_pending_amount": 0.0,
-            "total_receivable_amount": 0.0,
-            "target_amount": 0.0,
-            "today_bills_count": 0.0,
-            "current_month_target_amount": 0.0,
-            "previous_month_target_amount": 0.0,
+            "total_amount": 0,
+            "total_pending_amount": 0,
+            "total_receivable_amount": 0,
+            "target_amount": 0,
+            "today_bills_count": 0,
+            "current_month_target_amount": 0,
+            "previous_month_target_amount": 0,
         }
 
         # Get all orders for this distributor
@@ -642,9 +642,9 @@ class DistributorStatsAPIView(APIView):
             p_amount=orders.first().total_pending_amount()
             r_amount=t_amount-p_amount
             # Calculate the total pending amount
-            stats["total_amount"] +=orders.first().total_bill_amount()
-            stats["total_pending_amount"] += orders.first().total_pending_amount()
-            stats["total_receivable_amount"] = r_amount
+            stats["total_amount"] +=round(orders.first().total_bill_amount())
+            stats["total_pending_amount"] += round(orders.first().total_pending_amount())
+            stats["total_receivable_amount"] =round( r_amount)
 
 
             # amount collectds

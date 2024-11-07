@@ -2667,3 +2667,4 @@ Original exception text was: 'str' object has no attribute 'vendorFullname'.
 07-11-2024 14:26:26 [ERROR] magneta_logger: You are trying to reduce product quantity which is not present in the distributor stock list
 07-11-2024 14:26:26 [INFO] magneta_logger: Stock updated for Main Order 104
 07-11-2024 14:34:21 [ERROR] magneta_logger: Error in retailer_orders: {'retailer': [ErrorDetail(string='This field may not be null.', code='null')]}
+07-11-2024 18:48:49 [ERROR] magneta_logger: Error in login_user: {'email': [ErrorDetail(string='User with this email does not exist.', code='invalid')]}

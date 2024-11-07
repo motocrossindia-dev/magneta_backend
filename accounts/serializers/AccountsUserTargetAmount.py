@@ -13,14 +13,30 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = ('enterprise_name', 'first_name','id')
 
 
+def convert_date_format(date_str):
+    """
+    Converts a date string in the format 'YYYY-MM-DD' to the format 'MM YY'.
+
+    Parameters:
+    date_str (str): The date string in the format 'YYYY-MM-DD'.
+
+    Returns:
+    str: The date string in the format 'MM YY'.
+    """
+    year, month, _ = date_str.split('-')
+    return f"{month}-{year[-2:]}"
+
+
+# print(convert_date_format("2024-03-01"))
 class UserTargetAmountSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.first_name')
+    user_enterprise_name = serializers.ReadOnlyField(source='user.enterprise_name')
     user_id = serializers.IntegerField()
     month_year = serializers.CharField(write_only=True)  # Changed to CharField to handle the format
 
     class Meta:
         model = UserTargetAmount
-        fields = ['id', 'user', 'user_id', 'month_year', 'target_amount', 'start_date', 'end_date', 'status']
+        fields = ['id', 'user', 'user_id', 'month_year', 'target_amount', 'start_date', 'end_date', 'status','user_enterprise_name']
 
     def validate_month_year(self, value):
         try:
@@ -58,17 +74,29 @@ class UserTargetAmountSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        # First set start and end dates
-        self.set_start_end_dates(validated_data)
+        # Check if month_year was provided in validated_data
+        month_year_str = validated_data.get('month_year', None)
+        if month_year_str:
+            print(month_year_str,'============year put',)
+            data=convert_date_format(str(month_year_str))
+            print(data,'================')
+            # Convert month_year string to date and set start and end dates
+            validated_data['month_year'] = self.validate_month_year(convert_date_format(str(month_year_str)))
+            self.set_start_end_dates(validated_data)
 
         # Update fields on the instance
         for attr, value in validated_data.items():
-            if attr != 'user_id':  # Skip updating user_id
+            if attr != 'user_id':  # Exclude user_id from being updated
                 setattr(instance, attr, value)
 
-        # Save the instance (this will trigger the save method with timezone handling)
+        # Save the instance to persist changes
         instance.save()
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['month_year'] = instance.start_date.strftime('%m-%Y')
+        return data
 # class UserTargetAmountSerializer(serializers.ModelSerializer):
 #     user = serializers.ReadOnlyField(source='user.first_name')
 #     user_id = serializers.IntegerField(write_only=True)
