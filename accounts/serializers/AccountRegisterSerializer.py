@@ -74,11 +74,12 @@ class POSTaccountRegisterSerializer(serializers.ModelSerializer):
 
         aadhar = data.get('aadhar', None)
         if aadhar:
+            # Remove any whitespace around the input
+            aadhar = aadhar.strip()
             if not aadhar.isdigit():
                 raise serializers.ValidationError({"aadhar": ["Aadhar number should only contain digits."]})
             if len(aadhar) != 12:
                 raise serializers.ValidationError({"aadhar": ["Aadhar number should be exactly 12 digits long."]})
-
         return data
 
     def create(self, validated_data):

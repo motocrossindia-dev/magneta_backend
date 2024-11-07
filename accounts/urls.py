@@ -1,5 +1,6 @@
 from django.urls import path, re_path
 
+from accounts.view.AcountsUserTargetAmountViews import UserTargetAmountViewSet, UsersViewSet
 from accounts.view.CompanyInformation import company_information
 from accounts.view.DeleteAccount import delete_account, delete_profile_picture
 from accounts.view.Login import login_user
@@ -15,7 +16,16 @@ from accounts.view.UserProfile import user_profile, search_profile, update_user_
 
 app_name = 'accounts'
 
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'user_targets', UserTargetAmountViewSet)
+router.register(r'users', UsersViewSet)
+
 urlpatterns = [
+
     path('register/', account_register, name='account_register'),
     path('register/<int:pk>', account_register, name='account_register'),
     path('login/', login_user, name='login_user'),
@@ -38,4 +48,5 @@ urlpatterns = [
     path('update_user_permissions/', update_user_permissions, name='update_user_permissions'),
     path('delete_user_permissions/<int:permission_id>/', delete_user_permission, name='delete_user_permissions'),
     path('get_user_permissions/<int:user_id>/', get_user_permissions, name='get_user_permissions'),
+    path('', include(router.urls)),
 ]

@@ -1,5 +1,9 @@
 
+from datetime import timedelta
+
 from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
 
 from accounts.models import UserBase
 from products.models import Product
@@ -36,15 +40,28 @@ class RetailerMainOrders(models.Model):
         # return f"{self.distributor}_{self.distributor.id}"
         return str(self.id)
 
-    def save(self, *args, **kwargs):
-        """Set pending_amount to 0 if payment_status is 'paid'."""
-        if self.payment_status.lower() == "paid":
-            self.pending_amount = 0.00
 
-        if self.mode_of_payment.lower() in ["free sample", "paid", "cancelled"] or self.payment_status.lower() in ["cancelled"]:
-            self.pending_amount = 0.0
-            self.grand_total-=self.pending_amount
+    def save(self, *args, **kwargs):
+        if self.mode_of_payment.lower() in ["free sample", "paid", "cancelled"] or self.payment_status.lower() == "cancelled":
+            # Set all specified fields to 0
+            self.CGST = 0.00
+            self.SGST = 0.00
+            self.IGST = 0.00
+            self.gst = 0.00
+            self.sub_total = 0.00
+            self.grand_total = 0.00
+            self.pending_amount = 0.00
         super().save(*args, **kwargs)
+
+    # def save(self, *args, **kwargs):
+    #     """Set pending_amount to 0 if payment_status is 'paid'."""
+    #     if self.payment_status.lower() == "paid":
+    #         self.pending_amount = 0.00
+    #
+    #     if self.mode_of_payment.lower() in ["free sample", "paid", "cancelled"] or self.payment_status.lower() in ["cancelled"]:
+    #         self.pending_amount = 0.0
+    #         self.grand_total-=self.pending_amount
+    #     super().save(*args, **kwargs)
 
 
     # new==
@@ -96,7 +113,8 @@ class RetailerMainOrders(models.Model):
         orders = RetailerMainOrders.objects.filter(
             distributor=self.distributor
         ).exclude(
-            payment_status="cancelled"
+            payment_status="cancelled",
+            mode_of_payment__in=['free sample']
         )
 
         # Sum the sub_total for all non-cancelled orders
@@ -108,7 +126,8 @@ class RetailerMainOrders(models.Model):
         orders = RetailerMainOrders.objects.filter(
             distributor=self.distributor
         ).exclude(
-            payment_status="cancelled"
+            payment_status="cancelled",
+            mode_of_payment__in = ['free sample']
         )
 
         # Sum the pending_amount for all non-cancelled orders
@@ -126,12 +145,6 @@ class RetailerMainOrders(models.Model):
         total_count = orders.count()
         return total_count
 
-    def total_settiled_amount(self):
-        total_amount=0
-        settiled_amount=self.retailer_main_orders_transaction.all()
-        for amount in settiled_amount:
-            total_amount+=amount.amount_settled
-        return total_amount
     # ===========================
     @property
     def retailer_orders_discounts_total(self):

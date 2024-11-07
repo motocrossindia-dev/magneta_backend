@@ -1,6 +1,6 @@
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from accounts.models import UserBase, Otp
+from accounts.models import UserBase, Otp, UserTargetAmount
 from .models import CompanyInformation, Role, RolesPermission
 
 class UserAdmin(ImportExportModelAdmin, admin.ModelAdmin):
@@ -31,6 +31,7 @@ admin.site.register(CompanyInformation, CompanyInformationAdmin)
 
 admin.site.register(Role,RoleAdmin)
 admin.site.register(RolesPermission,RolesPermissionAdmin)
+admin.site.register(UserTargetAmount)
 
 # from django.contrib import admin
 # from accounts.models import UserBase, Otp

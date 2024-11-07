@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+from django.db.models import Q, Sum
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -65,7 +66,7 @@ def retailer_orders(request, pk=None):
         print(request.data,'--------------data')
         ordered_products = request.data.get('ordered_products', [])
         main_order = request.data.get('main_order', {})
-        invoice_discount = request.data.get('invoice_discount')
+        invoice_discount = request.data.get('invoice_discount',0)
         # print(main_order, "main_order,'=================main")
         # print(invoice_discount, "invoice_discount==========")
         # # main_order['distributor'] = user.pk
@@ -210,7 +211,7 @@ def retailer_orders(request, pk=None):
                     main_order.IGST_rate = round(gst.igst, 2)
                     main_order.gst_rate = round((main_order.CGST_rate + main_order.SGST_rate + main_order.IGST_rate), 2)
                     # ========new
-                    main_order.discount_percentage = invoice_discount
+                    main_order.discount_percentage = invoice_discount or 0
 
                 main_order.sub_total = round(sub_total, 2)
                 main_total=round((sub_total + main_order.gst), 2)
@@ -306,14 +307,20 @@ def distributor_today_collection(request):
             today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_end = today_start + timedelta(days=1)
 
+
             main_orders = RetailerMainOrders.objects.filter(distributor=distributor,
-                                                            order_date__range=(today_start, today_end))
-
+                                                                order_date__range=(today_start, today_end))
             total_collection = 0
+            total=[]
             for main_order in main_orders:
-                total_collection += main_order.grand_total
+                print("main order id ",main_order)
+                if main_order.mode_of_payment.lower() in ["free sample", "paid","cancelled"] or main_order.payment_status.lower()  in ["cancelled"]:
+                    print("main",main_order.grand_total)
+                else:
+                    total_collection+=main_order.grand_total
+                    total.append(main_order.grand_total)
 
-            return Response(data={"total_collection": total_collection, "bill_generated": main_orders.count()},
+            return Response(data={"total_collection": total_collection, "bill_generated": len(total)},
                             status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

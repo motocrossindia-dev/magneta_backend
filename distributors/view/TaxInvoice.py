@@ -1,20 +1,17 @@
 import logging
-import os
-from io import BytesIO
+from datetime import timedelta
 
-import fitz
-from django.conf import settings
+from django.db.models import Sum
 from django.http import FileResponse
-from reportlab.pdfgen import canvas
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from accounts.models import UserBase
 from distributors.invoice_utils import generate_invoice
-from distributors.models import RetailerMainOrders, RetailerOrders
+from distributors.models import RetailerMainOrders
 from orders.models import GST
 
 logger = logging.getLogger("magneta_logger")
@@ -517,13 +514,107 @@ def generate_receipt_pdf(request, pk):
 # </editor-fold>
 
 
+# <editor-fold desc="old">
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework.permissions import IsAuthenticated
+#
+# class DistributorStatsAPIView(APIView):
+#     permission_classes = []
+#     authentication_classes = [JWTAuthentication]
+#
+#     def get(self, request, *args, **kwargs):
+#         user = request.user
+#
+#         # Ensure the user is a distributor
+#         if not hasattr(user, 'is_distributor') or not user.is_distributor:
+#             return Response({"detail": "User is not a distributor"}, status=403)
+#
+#         # Retrieve distributor-specific stats
+#         stats = {
+#             "total_amount": 0.0,
+#             "total_pending_amount": 0.0,
+#             "total_receivable_amount": 0.0,
+#             "target_amount": 0.0,
+#             "today_bills_count": 0.0,
+#             "current_month_target_amount": 0.0,
+#             "previous_month_target_amount": 0.0,
+#         }
+#
+#         # Get all orders for this distributor
+#         orders = RetailerMainOrders.objects.filter(distributor=user)
+#         # Calculate total pending and bill amounts for the distributor
+#         if orders.exists():
+#             t_amount=orders.first().total_bill_amount()
+#             p_amount=orders.first().total_pending_amount()
+#             r_amount=t_amount-p_amount
+#             # Calculate the total pending amount
+#             stats["total_amount"] +=orders.first().total_bill_amount()
+#             stats["total_pending_amount"] += orders.first().total_pending_amount()
+#             stats["total_receivable_amount"] = r_amount
+#
+#             # Ensure t_amount is defined with a valid number
+#             # t_amount = t_amount if 't_amount' in locals() and t_amount else 0
+#             stats["target_amount"]=user.total_target_amount
+#
+#             # stats["target_amount"] = (t_amount/user.user_target_amounts.target_amount)/100
+#             stats["total_bills"] = orders.first().total_order_count()
+#             stats["current_month_target_amount"] = {
+#                 "target": round(int(user.current_month_target_amount)),
+#                 "amount": round(int(user.current_month_achieved_amount)),
+#                 "status": (str(round((user.current_month_achieved_amount / user.current_month_target_amount) * 100)) + '%' if user.current_month_target_amount > 0 else '0')
+#             }
+#             stats["previous_month_target_amount"] = {
+#                 "target": round(int(user.previous_month_target_amount)),
+#                 "amount": round(int(user.previous_month_achieved_amount)),
+#                 "status": (str(round((user.previous_month_achieved_amount / user.previous_month_target_amount) * 100)) + '%' if user.previous_month_target_amount > 0 else '0')
+#             }
+#         return Response(stats, status=200)
+# # </editor-fold>
+
+#
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+
+from django.db.models import Sum
+from django.utils import timezone
+from datetime import timedelta
+
+def get_distributor_amounts(distributor):
+    """
+    Calculate total bill amount, current month achieved amount, and previous month achieved amount
+    for a specific retailer, excluding cancelled orders.
+
+    Args:
+        distributor: Distributor object
+
+    Returns:
+        dict: Contains current_month_amount and previous_month_amount
+    """
+    # Get current date and first day of current month
+    today = timezone.now()
+    current_month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Calculate previous month's start and end dates
+    previous_month_end = current_month_start - timedelta(days=1)
+    previous_month_start = previous_month_end.replace(day=1)
+
+    # Base query for active orders
+    base_query = RetailerMainOrders.objects.filter(distributor=distributor).exclude(payment_status="cancelled")
+
+    # Aggregate current and previous month amounts
+    current_month_amount = base_query.filter(created__gte=current_month_start).aggregate(total=Sum('grand_total'))['total'] or 0
+    previous_month_amount = base_query.filter(created__gte=previous_month_start, created__lte=previous_month_end).aggregate(total=Sum('grand_total'))['total'] or 0
+
+    return {
+        'current_month_amount': current_month_amount,
+        'previous_month_amount': previous_month_amount
+    }
 
 class DistributorStatsAPIView(APIView):
     permission_classes = []
     authentication_classes = [JWTAuthentication]
+
 
     def get(self, request, *args, **kwargs):
         user = request.user
@@ -539,6 +630,8 @@ class DistributorStatsAPIView(APIView):
             "total_receivable_amount": 0.0,
             "target_amount": 0.0,
             "today_bills_count": 0.0,
+            "current_month_target_amount": 0.0,
+            "previous_month_target_amount": 0.0,
         }
 
         # Get all orders for this distributor
@@ -552,10 +645,32 @@ class DistributorStatsAPIView(APIView):
             stats["total_amount"] +=orders.first().total_bill_amount()
             stats["total_pending_amount"] += orders.first().total_pending_amount()
             stats["total_receivable_amount"] = r_amount
-            stats["target_amount"] = 10000
+
+
+            # amount collectds
+            achieved_amount=get_distributor_amounts(orders.first().distributor)
+
+            current_month_collected_amount=achieved_amount['current_month_amount'] or 0
+            previous_month_collected_amount=achieved_amount['previous_month_amount'] or 0
+
+            # # Ensure t_amount is defined with a valid number
+            # t_amount = t_amount if 't_amount' in locals() and t_amount else 0
+
+            # stats["target_amount"] = (t_amount/user.user_target_amounts.target_amount)/100
             stats["total_bills"] = orders.first().total_order_count()
-            stats["current_month_target_amount"] = {"amount":1000,"status":'10%' }
-            stats["previous_month_target_amount"] = {"amount":30000,"status":'50%' }
+
+            stats["current_month_target_amount"] = {
+                "target": round(int(user.current_month_target_amount)),
+                "amount": round(int(current_month_collected_amount)),
+                "status": (str(round((current_month_collected_amount / user.current_month_target_amount) * 100)) + '%'
+                           if user.current_month_target_amount > 0 else '0')
+            }
+            stats["previous_month_target_amount"] = {
+                "target": round(int(user.previous_month_target_amount)),
+                "amount": round(int(previous_month_collected_amount)),
+                "status": (str(round((previous_month_collected_amount / user.previous_month_target_amount) * 100)) + '%'
+                           if user.previous_month_target_amount > 0 else '0')
+            }
         return Response(stats, status=200)
 
 

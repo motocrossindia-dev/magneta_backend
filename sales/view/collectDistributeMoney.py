@@ -46,7 +46,11 @@ def collectMoney(request):
             mode_of_payment = request.data.get('mode_of_payment')
             details = request.data.get('details')
 
-            retailer = UserBase.objects.get(pk=retailer_id)
+            try:
+                retailer = UserBase.objects.get(pk=retailer_id)
+                print(retailer_id,'==============id')
+            except:
+                retailer = UserBase.objects.get(enterprise_name__exact=retailer_id)
             try:
                 distributor = distributor_sales.objects.get(sales_person=request.user).distributor
             except Exception as e:

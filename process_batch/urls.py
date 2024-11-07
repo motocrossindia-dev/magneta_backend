@@ -36,12 +36,9 @@ urlpatterns = [
     path('batch_mix_icecream_template/<int:pk>/', get_batch_mix_icecream_template, name='get_batch_mix_template'),
 
     # <editor-fold desc="batch mix create related ">
-    # path('batch_mix/', batch_mix_create, name='batch_mix'),
+    path('batch_mix/', batch_mix_create, name='batch_mix'),
 
-    # path('chocolate_ice_cream_batch_mix/', batch_mix_chocolate_icecream_create, name='batch_mix_chocolate_icecream_create'),
-    # </editor-fold>
-    # <editor-fold desc="chocolate and icecream batch mix template">
-    path('batch_mix/', batch_mix_chocolate_icecream_create, name='batch_mix_chocolate_icecream_create'),
+    path('chocolate_ice_cream_batch_mix/', batch_mix_chocolate_icecream_create, name='batch_mix_chocolate_icecream_create'),
     # </editor-fold>
 
     # <editor-fold desc="ice cream related post  for create ice ">
@@ -89,8 +86,8 @@ urlpatterns = [
 
 
     # <editor-fold desc="batch mix update">
-    # path('batch_mix_update/<int:pk>/', batch_mix_update_view, name='batch_mix_update_view'),
-    path('batch_mix_update/<int:pk>/', batch_mix_chocolate_icecream_batchmix_update_view, name='batch_mix_chocolate_icecream_batchmix_update_view'),
+    path('batch_mix_update/<int:pk>/', batch_mix_update_view, name='batch_mix_update_view'),
+    path('batch_mix_chocolate_icecream_update/<int:pk>/', batch_mix_chocolate_icecream_batchmix_update_view, name='batch_mix_chocolate_icecream_batchmix_update_view'),
     # </editor-fold>
     path('batchmix_expired/<int:pk>/', BatchMixUpdateView.as_view(), name='batchmix-update'),
 
